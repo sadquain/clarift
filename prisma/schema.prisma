@@ -1,0 +1,258 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  WRITER
+  READER
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  PUBLISH
+  LOGIN
+  AI_GENERATE
+  MODERATE
+  NOTIFY
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          Role      @default(READER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  accounts       Account[]
+  sessions       Session[]
+  bookmarks      Bookmark[]
+  likes          Like[]
+  comments       Comment[]
+  readingHistory ReadingHistory[]
+  aiGenerations  AiGeneration[]
+  auditLogs      AuditLog[]
+  notifications  Notification[]
+  authorFollows  AuthorFollow[]
+
+  @@index([role])
+  @@index([deletedAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  postSlug  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postSlug])
+  @@index([postSlug])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  postSlug  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postSlug])
+  @@index([postSlug])
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  userId    String
+  postSlug  String
+  parentId  String?
+  body      String    @db.Text
+  approved  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentThread", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentThread")
+
+  @@index([postSlug, approved])
+  @@index([deletedAt])
+}
+
+model PostAnalytics {
+  id              String   @id @default(cuid())
+  postSlug        String
+  views           Int      @default(0)
+  uniqueReaders   Int      @default(0)
+  avgReadSeconds  Int      @default(0)
+  seoScore        Int      @default(0)
+  newsletterClicks Int     @default(0)
+  date            DateTime @default(now())
+
+  @@unique([postSlug, date])
+  @@index([date])
+}
+
+model SearchAnalytics {
+  id        String   @id @default(cuid())
+  query     String
+  category  String?
+  resultCount Int
+  latencyMs Int
+  userId    String?
+  createdAt DateTime @default(now())
+
+  @@index([query])
+  @@index([createdAt])
+}
+
+model AiGeneration {
+  id          String   @id @default(cuid())
+  userId      String
+  mode        String
+  promptHash  String
+  tokenCount  Int      @default(0)
+  model       String
+  latencyMs   Int?
+  promptVersion String @default("v1")
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([mode])
+}
+
+model PromptVersion {
+  id          String   @id @default(cuid())
+  version     String   @unique
+  mode        String
+  systemText  String   @db.Text
+  checksum    String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([mode, active])
+}
+
+model ReadingHistory {
+  id             String   @id @default(cuid())
+  userId         String
+  postSlug       String
+  progress       Int      @default(0)
+  lastReadAt     DateTime @default(now())
+  completedAt    DateTime?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postSlug])
+  @@index([lastReadAt])
+}
+
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  status         String    @default("subscribed")
+  source         String?
+  subscribedAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+
+  @@index([status])
+}
+
+model NewsletterEvent {
+  id        String   @id @default(cuid())
+  email     String
+  type      String
+  campaign  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([type, createdAt])
+}
+
+model AuthorFollow {
+  id         String   @id @default(cuid())
+  userId     String
+  authorSlug String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, authorSlug])
+  @@index([authorSlug])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String?
+  action    AuditAction
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime    @default(now())
+  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([entity, entityId])
+}
