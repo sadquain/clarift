@@ -1,0 +1,22 @@
+export const post = {
+  name: "post",
+  title: "Post",
+  type: "document",
+  fields: [
+    { name: "title", type: "string", validation: "required" },
+    { name: "slug", type: "slug", options: { source: "title", maxLength: 96 } },
+    { name: "excerpt", type: "text", rows: 3 },
+    { name: "coverImage", type: "image", options: { hotspot: true } },
+    { name: "author", type: "reference", to: [{ type: "author" }] },
+    { name: "category", type: "reference", to: [{ type: "category" }] },
+    { name: "tags", type: "array", of: [{ type: "reference", to: [{ type: "tag" }] }] },
+    { name: "body", type: "array", of: [{ type: "block" }, { type: "image" }, { type: "code" }] },
+    { name: "aiSummary", type: "text", rows: 4 },
+    { name: "faqs", type: "array", of: [{ type: "object", fields: [{ name: "question", type: "string" }, { name: "answer", type: "text" }] }] },
+    { name: "seo", type: "seo" },
+    { name: "publishedAt", type: "datetime" },
+    { name: "scheduledFor", type: "datetime" },
+    { name: "workflowStatus", type: "string", options: { list: ["draft", "review", "scheduled", "published"] } },
+  ],
+  preview: { select: { title: "title", media: "coverImage", subtitle: "workflowStatus" } },
+};
