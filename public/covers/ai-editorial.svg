@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">AI editorial workspace</title>
+  <desc id="desc">Abstract editorial dashboard with article cards and AI signal lines.</desc>
+  <rect width="1600" height="900" fill="#e8f4f7"/>
+  <rect x="120" y="110" width="1360" height="680" rx="34" fill="#ffffff"/>
+  <rect x="180" y="170" width="460" height="80" rx="18" fill="#146b5d"/>
+  <rect x="180" y="300" width="560" height="34" rx="17" fill="#dce5df"/>
+  <rect x="180" y="360" width="680" height="34" rx="17" fill="#dce5df"/>
+  <rect x="180" y="420" width="500" height="34" rx="17" fill="#dce5df"/>
+  <rect x="980" y="180" width="320" height="320" rx="160" fill="#b65f2b" opacity=".9"/>
+  <path d="M880 610C980 520 1095 520 1200 610S1410 700 1490 610" fill="none" stroke="#146b5d" stroke-width="34" stroke-linecap="round"/>
+  <circle cx="1060" cy="340" r="24" fill="#fff"/>
+  <circle cx="1215" cy="340" r="24" fill="#fff"/>
+</svg>
